@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The 3-15 Effect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ease:cubic-bezier(.16,1,.3,1);--spring:cubic-bezier(.34,1.56,.64,1);
+  --sans:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Inter","Helvetica Neue",Arial,sans-serif;
+  --serif:"Instrument Serif","New York",Georgia,serif;
+  --mono:"JetBrains Mono","SF Mono",ui-monospace,Menlo,monospace;
+  --ink:#f4f8f9;--mut:rgba(228,240,243,.68);--dim:rgba(228,240,243,.42);
+  --teal:#52d6e8;--gold:#ffb45e;
+  --pp:0%;
+  --acc:color-mix(in oklab,var(--teal),var(--gold) var(--pp));
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#03070b;color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+canvas#sky{position:fixed;inset:0;width:100vw;height:100vh;z-index:0}
+em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--acc)}
+.app{position:relative;z-index:2;height:100vh;height:100dvh;display:grid;grid-template-rows:auto 1fr auto;padding:18px 28px 20px;gap:6px}
+header{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.82)}
+.mark{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 50% 70%,var(--gold),transparent 62%);box-shadow:0 0 0 1px rgba(255,255,255,.35),0 0 16px var(--acc)}
+h1{margin:0;font-size:clamp(26px,3.4vw,46px);font-weight:700;letter-spacing:-.04em;line-height:1;text-align:center}
+.day{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.75)}
+.day b{color:var(--acc)}
+
+.mid{display:grid;grid-template-columns:260px minmax(0,1fr) 260px;gap:20px;align-items:center;min-height:0}
+.treebox{height:100%;min-height:0;display:flex;align-items:center;justify-content:center}
+svg#tree{height:100%;max-width:100%;aspect-ratio:1/1;overflow:visible;touch-action:manipulation}
+.node{cursor:pointer}
+.node:hover .core{filter:brightness(1.35)}
+.node.spent{cursor:default}
+
+.glass{border-radius:24px;padding:22px;background:linear-gradient(160deg,rgba(255,255,255,.085),rgba(255,255,255,.018));
+  -webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 1px 0 rgba(255,255,255,.18),0 30px 80px rgba(0,0,0,.35)}
+.lbl{font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
+.big{font-size:56px;font-weight:750;letter-spacing:-.05em;line-height:1;margin:8px 0 4px;font-variant-numeric:tabular-nums}
+.sub{font-size:14px;color:var(--mut);line-height:1.35}
+.sub b{color:var(--acc)}
+.side{display:flex;flex-direction:column;gap:14px}
+
+.dots{display:flex;gap:8px;margin:14px 0 10px}
+.dots i{width:22px;height:22px;border-radius:50%;background:rgba(82,214,232,.6)}
+.dots i:last-child{background:var(--gold);box-shadow:0 0 0 4px rgba(255,180,94,.22),0 0 16px rgba(255,180,94,.75)}
+.rule{font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.rule span{color:var(--gold)}
+.pips{display:flex;gap:8px;margin-top:12px}
+.pips i{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.12);transition:all .6s var(--spring)}
+.pips i.on{background:linear-gradient(90deg,var(--teal),var(--gold));box-shadow:0 0 14px rgba(255,180,94,.5)}
+.flash{animation:flash 1s var(--ease)}
+@keyframes flash{30%{box-shadow:inset 0 0 0 1px var(--acc),0 0 40px -4px var(--acc)}}
+
+footer{display:flex;flex-direction:column;align-items:center;gap:12px}
+.caption{font-size:clamp(15px,1.5vw,19px);color:var(--mut);text-align:center;min-height:1.4em;transition:opacity .3s}
+.caption b{color:var(--ink)}
+.caption .k{color:var(--acc);font-weight:650}
+.row{display:flex;gap:12px;align-items:center}
+button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.run{position:relative;padding:15px 34px;border-radius:999px;color:#061016;font-size:19px;font-weight:750;
+  background:linear-gradient(135deg,var(--teal),var(--acc) 55%,var(--gold));box-shadow:0 10px 40px color-mix(in oklab,var(--acc),transparent 55%),inset 0 1px 0 rgba(255,255,255,.6);transition:transform .25s var(--spring)}
+.run:hover{transform:translateY(-2px) scale(1.02)}
+.run:active{transform:scale(.96)}
+.run::after{content:"";position:absolute;inset:-6px;border-radius:999px;box-shadow:0 0 0 2px var(--acc);opacity:0;animation:halo 2.4s ease-out infinite}
+@keyframes halo{0%{opacity:.7;transform:scale(.96)}100%{opacity:0;transform:scale(1.12)}}
+.ghost{padding:14px 20px;border-radius:999px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);color:var(--mut);font-size:14px;font-weight:550}
+.ghost:hover{color:var(--ink);background:rgba(255,255,255,.12)}
+
+@media (max-width:860px){
+  .app{padding:14px 16px 16px}
+  h1{display:none}
+  .mid{grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr) auto;gap:10px}
+  .treebox{grid-column:1/3;grid-row:1}
+  .side{display:contents}
+  .glass{padding:14px}
+  .big{font-size:34px}
+  .dots i{width:14px;height:14px}
+  .dots{gap:5px;margin:8px 0 6px}
+  .rule{font-size:15px}
+  .sub{font-size:12px}
+  .hide-sm{display:none}
+}
+@media (prefers-reduced-motion:reduce){*,*::after{animation:none!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<div class="app">
+  <header>
+    <div class="brand"><div class="mark"></div>Team RISE · 3-15</div>
+    <h1>One circle. <em>Ninety days.</em></h1>
+    <div class="day">Day <b id="day">0</b> / 90</div>
+  </header>
+
+  <div class="mid">
+    <div class="side">
+      <div class="glass">
+        <div class="lbl">The math</div>
+        <div class="dots"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="rule">Every 5 Step 1/2s = <span>1 partner</span></div>
+        <div class="sub hide-sm" style="margin-top:8px">3-15 = 3 partners and 15,000 points in a month.</div>
+      </div>
+      <div class="glass" id="cSits">
+        <div class="lbl">Your Step 1/2s held</div>
+        <div class="big" id="sits">0</div>
+        <div class="sub" id="sitsSub">15 a month. About 4 a week.</div>
+      </div>
+    </div>
+
+    <div class="treebox">
+      <svg id="tree" viewBox="-600 -600 1200 1200" aria-label="Team growth">
+        <defs>
+          <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="7" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <radialGradient id="youG" cx="50%" cy="38%" r="70%">
+            <stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#ffe2b4"/><stop offset="1" stop-color="#ffb45e"/>
+          </radialGradient>
+        </defs>
+        <g id="gRings"></g><g id="gLinks"></g><g id="gPulses"></g><g id="gNodes" filter="url(#glow)"></g>
+      </svg>
+    </div>
+
+    <div class="side">
+      <div class="glass" id="cTeam">
+        <div class="lbl">Business partners</div>
+        <div class="big" id="team">0</div>
+        <div class="sub" id="teamSub">Everyone runs 3-15.</div>
+      </div>
+      <div class="glass" id="cGx">
+        <div class="lbl">Your GX</div>
+        <div class="big" id="gx">GX0</div>
+        <div class="sub" id="gxSub">3 months of 3-15 = MD.</div>
+        <div class="pips"><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="caption" id="caption"></div>
+    <div class="row">
+      <button class="run" id="run">Run Month 1</button>
+      <button class="ghost" id="reset">Start over</button>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = s => document.querySelector(s);
+const fmt = n => Math.round(n).toLocaleString('en-US');
+
+/* sky: sunrise climbs as the months go by */
+const sky=$('#sky'), sx=sky.getContext('2d');
+let W=0,H=0,P=0,Pt=0;
+const motes=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),v:.00012+Math.random()*.0004,r:.6+Math.random()*1.8,a:Math.random()*6.28}));
+function size(){const d=Math.min(devicePixelRatio,1.5);W=sky.width=innerWidth*d;H=sky.height=innerHeight*d;}
+addEventListener('resize',size); size();
+const mix=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+const rgb=(c,a)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+function drawSky(){
+  const p=P, g=sx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,rgb(mix([2,6,11],[8,16,34],p),1)); g.addColorStop(.55,rgb(mix([4,12,20],[40,30,52],p),1)); g.addColorStop(1,rgb(mix([8,26,36],[255,150,80],p*.9),1));
+  sx.fillStyle=g; sx.fillRect(0,0,W,H);
+  const sy=H*(1.18-.36*p), sr=Math.max(W,H)*(.42+.25*p), sg=sx.createRadialGradient(W/2,sy,0,W/2,sy,sr);
+  sg.addColorStop(0,`rgba(255,214,150,${.12+.5*p})`); sg.addColorStop(.25,`rgba(255,170,90,${.08+.28*p})`); sg.addColorStop(1,'rgba(255,140,80,0)');
+  sx.fillStyle=sg; sx.fillRect(0,0,W,H);
+  const mc=mix([140,230,240],[255,210,150],p);
+  for(const m of motes){ if(!reduce){m.y-=m.v;m.a+=.01;if(m.y<-.02){m.y=1.02;m.x=Math.random();}}
+    sx.beginPath(); sx.arc(m.x*W,m.y*H,m.r*(W/1400+.6),0,6.28); sx.fillStyle=rgb(mc,Math.max(0,(.25+.35*Math.sin(m.a))*.8)); sx.fill(); }
+}
+
+/* tree */
+const NS='http://www.w3.org/2000/svg';
+const gRings=$('#gRings'),gLinks=$('#gLinks'),gPulses=$('#gPulses'),gNodes=$('#gNodes');
+const COLORS=['#ffd9a0','#52d6e8','#7ea4ff','#ffb45e'];
+const RAD=[52,25,15.5,10,7,5];
+const DUR=reduce?1:1150;
+let nodes=[],root,M=0,filled=0,t0=0,animating=false,pulses=[],spawnI=0,STEP=185,fired={};
+const el=(tag,a,p)=>{const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+
+function mk(parent,joined){
+  const n={parent,joined,depth:parent?parent.depth+1:0,kids:[],runs:[],x:parent?parent.x:0,y:parent?parent.y:0,s:parent?0:1,fx:0,fy:0,fs:0,tx:0,ty:0,delay:0};
+  if(parent){parent.kids.push(n); n.delay=reduce?0:Math.min(spawnI++*16,650);}
+  const r=RAD[n.depth]||4,col=COLORS[Math.min(joined,3)];
+  if(parent) n.link=el('line',{stroke:col,'stroke-width':Math.max(1.2,3.2-n.depth*.55),'stroke-opacity':.42,'stroke-linecap':'round'},gLinks);
+  n.g=el('g',{class:'node'},gNodes);
+  if(!parent){
+    n.halo=el('circle',{r:66,fill:'none',stroke:'#ffd9a0','stroke-opacity':.35,'stroke-width':2},n.g);
+    el('circle',{class:'core',r,fill:'url(#youG)'},n.g);
+    const t=el('text',{y:7,'text-anchor':'middle','font-family':'JetBrains Mono, monospace','font-size':19,'font-weight':600,'letter-spacing':3,fill:'#2a1606'},n.g); t.textContent='YOU';
+  } else {
+    el('circle',{class:'core',r,fill:col},n.g);
+    el('circle',{r:r*.42,cx:-r*.25,cy:-r*.3,fill:'#fff','fill-opacity':.35},n.g);
+  }
+  n.g.addEventListener('click',e=>{e.stopPropagation();tap(n);});
+  nodes.push(n); return n;
+}
+function weight(n){const own=n.depth?(2*(RAD[n.depth]||4)*1.3+8)/(n.depth*STEP):0;let w=0;for(const k of n.kids)w+=weight(k);return Math.max(own,w);}
+function layout(){
+  const D=Math.max(1,...nodes.map(n=>n.depth)); STEP=Math.min(185,530/D);
+  (function place(n,a0,a1){
+    const r=n.depth*STEP,a=(a0+a1)/2; n.tx=n.depth?r*Math.cos(a):0; n.ty=n.depth?r*Math.sin(a):0;
+    if(!n.kids.length)return; const tot=n.kids.reduce((s,k)=>s+weight(k),0); let c=a0;
+    for(const k of n.kids){const sp=(a1-a0)*weight(k)/tot;place(k,c,c+sp);c+=sp;}
+  })(root,-Math.PI/2-Math.PI/Math.max(1,root.kids.length),Math.PI*1.5-Math.PI/Math.max(1,root.kids.length));
+  gRings.innerHTML='';
+  for(let d=1;d<=D;d++) el('circle',{r:d*STEP,fill:'none',stroke:'rgba(255,255,255,.07)','stroke-dasharray':'2 8','stroke-width':1.5},gRings);
+  for(const n of nodes){n.fx=n.x;n.fy=n.y;n.fs=n.s;}
+  t0=performance.now(); animating=true;
+}
+const easeOut=t=>1-Math.pow(1-t,3);
+const easeBack=t=>1+2.70158*Math.pow(t-1,3)+1.70158*Math.pow(t-1,2);
+function stepTree(now){
+  let done=true;
+  for(const n of nodes){const t=Math.max(0,Math.min(1,(now-t0-n.delay)/DUR)); if(t<1)done=false;
+    const e=easeOut(t); n.x=n.fx+(n.tx-n.fx)*e; n.y=n.fy+(n.ty-n.fy)*e; n.s=n.fs<1?n.fs+(1-n.fs)*easeBack(t):1;}
+  for(const n of nodes){
+    n.g.setAttribute('transform',`translate(${n.x.toFixed(1)},${n.y.toFixed(1)}) scale(${Math.max(0,n.s).toFixed(3)})`);
+    if(n.link){const p=n.parent;n.link.setAttribute('x1',p.x);n.link.setAttribute('y1',p.y);n.link.setAttribute('x2',n.x);n.link.setAttribute('y2',n.y);}
+  }
+  if(done)animating=false;
+}
+function pulse(n,color,big){
+  const r0=RAD[n.depth]||5;
+  pulses.push({c:el('circle',{r:r0,fill:'none',stroke:color,'stroke-width':big?4:2.5},gPulses),n,t0:performance.now(),r0,grow:big?220:70+r0*2,dur:big?1600:1000});
+}
+function stepPulses(now){
+  pulses=pulses.filter(p=>{const t=(now-p.t0)/p.dur; if(t>=1){p.c.remove();return false;}
+    p.c.setAttribute('cx',p.n.x);p.c.setAttribute('cy',p.n.y);p.c.setAttribute('r',p.r0+p.grow*easeOut(t));p.c.setAttribute('stroke-opacity',(1-t)*.9);return true;});
+}
+
+function run(n,m){ if(n.runs.includes(m))return; n.runs.push(m); for(let i=0;i<3;i++)mk(n,m); pulse(n,COLORS[m],n===root); }
+function runMonth(m){ spawnI=0; nodes.filter(n=>n.joined<m&&!n.runs.includes(m)).forEach(n=>run(n,m)); }
+
+function press(){
+  if(M>=3&&filled>=3){reset();return;}
+  if(filled<M){runMonth(M);filled=M;} else {M++;runMonth(M);filled=M;}
+  update();
+}
+function tap(n){
+  if(M===0&&n===root){press();return;}
+  const next=Math.max(n.joined+1,(n.runs.length?Math.max(...n.runs):0)+1);
+  if(next>3)return;
+  spawnI=0; run(n,next); M=Math.max(M,next); update();
+}
+function reset(){
+  gLinks.innerHTML=gNodes.innerHTML=gPulses.innerHTML=gRings.innerHTML='';
+  nodes=[];pulses=[];M=0;filled=0;fired={};root=mk(null,0);update(true);
+}
+
+/* numbers */
+const shown={team:0,sits:0};
+function countTo(id,to){const e=$('#'+id),from=shown[id];shown[id]=to;if(reduce||from===to){e.textContent=fmt(to);return;}
+  const s=performance.now();(function f(now){const t=Math.min(1,(now-s)/1000);e.textContent=fmt(from+(to-from)*easeOut(t));if(t<1)requestAnimationFrame(f);})(s);}
+function flash(id){const e=$(id);e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');}
+
+function update(silent){
+  layout();
+  const partners=nodes.length-1, runs=root.runs.length;
+  countTo('team',partners);
+  countTo('sits',runs*15);
+  $('#teamSub').innerHTML = M===0 ? 'Everyone runs 3-15.' : `<b>${fmt(partners*5000)}</b> team points.`;
+  $('#sitsSub').innerHTML = runs===0 ? '15 a month. About 4 a week.' : `Turned into <b>${runs*3} partners</b> for you.`;
+  $('#gx').textContent='GX'+runs;
+  $('#gxSub').innerHTML = runs>=3 ? '<b>MD on Fast Start.</b>' : runs===0 ? '3 months of 3-15 = MD.' : `<b>${3-runs} more month${runs===2?'':'s'}</b> to MD.`;
+  document.querySelectorAll('.pips i').forEach((p,i)=>p.classList.toggle('on',i<runs));
+  if(root.halo) root.halo.style.display=M===0?'':'none';
+  for(const n of nodes){const next=Math.max(n.joined+1,(n.runs.length?Math.max(...n.runs):0)+1);n.g.classList.toggle('spent',next>3);}
+
+  let cap;
+  if(M===0) cap='Tap <b>YOU</b>. One month of 3-15 = <span class="k">3 business partners</span>.';
+  else if(filled<M) cap=`<b>Day ${M*30}.</b> Hit the button so everyone runs Month ${M}.`;
+  else if(M===1) cap='<b>Day 30.</b> You ran 3-15 once. <span class="k">GX1.</span> Now your 3 do it too.';
+  else if(M===2) cap='<b>Day 60.</b> You did it again. So did your 3. <span class="k">GX2.</span>';
+  else cap=`<b>Day 90.</b> ${runs>=3?'Three months in a row.':''} <span class="k">${nodes.length} people.</span> Same simple thing, every month.`;
+  const c=$('#caption'); c.style.opacity=0; setTimeout(()=>{c.innerHTML=cap;c.style.opacity=1;},silent?0:160);
+
+  $('#run').textContent = M>=3&&filled>=3 ? 'See it again' : filled<M ? `Everyone runs Month ${M}` : `Run Month ${M+1}`;
+  $('#day').textContent=M*30; Pt=M/3;
+  if(silent)return;
+  flash('#cTeam'); if(runs)flash('#cSits');
+  if(runs>=1&&!fired[runs]){fired[runs]=1;flash('#cGx');}
+  if(runs>=3&&!fired.md){fired.md=1;setTimeout(()=>{pulse(root,'#ffb45e',true);setTimeout(()=>pulse(root,'#52d6e8',true),260);},500);}
+}
+
+$('#run').addEventListener('click',press);
+$('#reset').addEventListener('click',reset);
+
+function frame(now){
+  P+=(Pt-P)*(reduce?1:.03);
+  document.documentElement.style.setProperty('--pp',(P*100).toFixed(1)+'%');
+  drawSky();
+  if(animating)stepTree(now);
+  if(pulses.length)stepPulses(now);
+  if(root.halo&&M===0&&!reduce){const s=Math.sin(now/420);root.halo.setAttribute('r',(66*(1+.12*s)).toFixed(1));root.halo.setAttribute('stroke-opacity',(.45-.25*s).toFixed(2));}
+  requestAnimationFrame(frame);
+}
+reset(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
