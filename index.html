@@ -30,8 +30,8 @@ h1{margin:0;font-size:clamp(26px,3.4vw,46px);font-weight:700;letter-spacing:-.04
 .day{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.75)}
 .day b{color:var(--acc)}
 
-.mid{display:grid;grid-template-columns:260px minmax(0,1fr) 260px;gap:20px;align-items:center;min-height:0}
-.treebox{height:100%;min-height:0;display:flex;align-items:center;justify-content:center}
+.mid{display:flex;flex-direction:column;gap:14px;min-height:0}
+.treebox{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
 svg#tree{height:100%;max-width:100%;aspect-ratio:1/1;overflow:visible;touch-action:manipulation}
 .node{cursor:pointer}
 .node:hover .core{filter:brightness(1.35)}
@@ -41,16 +41,11 @@ svg#tree{height:100%;max-width:100%;aspect-ratio:1/1;overflow:visible;touch-acti
   -webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 1px 0 rgba(255,255,255,.18),0 30px 80px rgba(0,0,0,.35)}
 .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
-.big{font-size:56px;font-weight:750;letter-spacing:-.05em;line-height:1;margin:8px 0 4px;font-variant-numeric:tabular-nums}
-.sub{font-size:14px;color:var(--mut);line-height:1.35}
+.big{font-size:44px;font-weight:750;letter-spacing:-.05em;line-height:1;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.sub{font-size:13.5px;color:var(--mut);line-height:1.35}
 .sub b{color:var(--acc)}
-.side{display:flex;flex-direction:column;gap:14px}
-
-.dots{display:flex;gap:8px;margin:14px 0 10px}
-.dots i{width:22px;height:22px;border-radius:50%;background:rgba(82,214,232,.6)}
-.dots i:last-child{background:var(--gold);box-shadow:0 0 0 4px rgba(255,180,94,.22),0 0 16px rgba(255,180,94,.75)}
-.rule{font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
-.rule span{color:var(--gold)}
+.side{display:flex;gap:14px;justify-content:center}
+.side .glass{width:250px;padding:16px 20px}
 .pips{display:flex;gap:8px;margin-top:12px}
 .pips i{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.12);transition:all .6s var(--spring)}
 .pips i.on{background:linear-gradient(90deg,var(--teal),var(--gold));box-shadow:0 0 14px rgba(255,180,94,.5)}
@@ -75,16 +70,11 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 @media (max-width:860px){
   .app{padding:14px 16px 16px}
   h1{display:none}
-  .mid{grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr) auto;gap:10px}
-  .treebox{grid-column:1/3;grid-row:1}
-  .side{display:contents}
-  .glass{padding:14px}
+  .mid{gap:10px}
+  .side{gap:10px}
+  .side .glass{flex:1;width:auto;padding:14px}
   .big{font-size:34px}
-  .dots i{width:14px;height:14px}
-  .dots{gap:5px;margin:8px 0 6px}
-  .rule{font-size:15px}
   .sub{font-size:12px}
-  .hide-sm{display:none}
 }
 @media (prefers-reduced-motion:reduce){*,*::after{animation:none!important;transition-duration:.01s!important}}
 </style>
@@ -99,20 +89,6 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
   </header>
 
   <div class="mid">
-    <div class="side">
-      <div class="glass">
-        <div class="lbl">The math</div>
-        <div class="dots"><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="rule">Every 5 Step 1/2s = <span>1 partner</span></div>
-        <div class="sub hide-sm" style="margin-top:8px">3-15 = 3 partners and 15,000 points in a month.</div>
-      </div>
-      <div class="glass" id="cSits">
-        <div class="lbl">Your Step 1/2s held</div>
-        <div class="big" id="sits">0</div>
-        <div class="sub" id="sitsSub">15 a month. About 4 a week.</div>
-      </div>
-    </div>
-
     <div class="treebox">
       <svg id="tree" viewBox="-600 -600 1200 1200" aria-label="Team growth">
         <defs>
@@ -258,7 +234,7 @@ function reset(){
 }
 
 /* numbers */
-const shown={team:0,sits:0};
+const shown={team:0};
 function countTo(id,to){const e=$('#'+id),from=shown[id];shown[id]=to;if(reduce||from===to){e.textContent=fmt(to);return;}
   const s=performance.now();(function f(now){const t=Math.min(1,(now-s)/1000);e.textContent=fmt(from+(to-from)*easeOut(t));if(t<1)requestAnimationFrame(f);})(s);}
 function flash(id){const e=$(id);e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');}
@@ -267,9 +243,7 @@ function update(silent){
   layout();
   const partners=nodes.length-1, runs=root.runs.length;
   countTo('team',partners);
-  countTo('sits',runs*15);
   $('#teamSub').innerHTML = M===0 ? 'Everyone runs 3-15.' : `<b>${fmt(partners*5000)}</b> team points.`;
-  $('#sitsSub').innerHTML = runs===0 ? '15 a month. About 4 a week.' : `Turned into <b>${runs*3} partners</b> for you.`;
   $('#gx').textContent='GX'+runs;
   $('#gxSub').innerHTML = runs>=3 ? '<b>MD on Fast Start.</b>' : runs===0 ? '3 months of 3-15 = MD.' : `<b>${3-runs} more month${runs===2?'':'s'}</b> to MD.`;
   document.querySelectorAll('.pips i').forEach((p,i)=>p.classList.toggle('on',i<runs));
@@ -287,7 +261,7 @@ function update(silent){
   $('#run').textContent = M>=3&&filled>=3 ? 'See it again' : filled<M ? `Everyone runs Month ${M}` : `Run Month ${M+1}`;
   $('#day').textContent=M*30; Pt=M/3;
   if(silent)return;
-  flash('#cTeam'); if(runs)flash('#cSits');
+  flash('#cTeam');
   if(runs>=1&&!fired[runs]){fired[runs]=1;flash('#cGx');}
   if(runs>=3&&!fired.md){fired.md=1;setTimeout(()=>{pulse(root,'#ffb45e',true);setTimeout(()=>pulse(root,'#52d6e8',true),260);},500);}
 }
